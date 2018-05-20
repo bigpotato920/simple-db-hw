@@ -9,6 +9,8 @@ import java.io.Serializable;
 public class RecordId implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    private PageId pid;
+    private int tupleno;
 
     /**
      * Creates a new RecordId referring to the specified PageId and tuple
@@ -21,6 +23,8 @@ public class RecordId implements Serializable {
      */
     public RecordId(PageId pid, int tupleno) {
         // some code goes here
+        this.pid = pid;
+        this.tupleno = tupleno;
     }
 
     /**
@@ -28,7 +32,7 @@ public class RecordId implements Serializable {
      */
     public int getTupleNumber() {
         // some code goes here
-        return 0;
+        return this.tupleno;
     }
 
     /**
@@ -36,32 +40,25 @@ public class RecordId implements Serializable {
      */
     public PageId getPageId() {
         // some code goes here
-        return null;
+        return this.pid;
     }
 
-    /**
-     * Two RecordId objects are considered equal if they represent the same
-     * tuple.
-     * 
-     * @return True if this and o represent the same tuple
-     */
     @Override
     public boolean equals(Object o) {
-        // some code goes here
-        throw new UnsupportedOperationException("implement this");
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        RecordId recordId = (RecordId) o;
+
+        if (tupleno != recordId.tupleno) return false;
+        return pid.equals(recordId.pid);
+
     }
 
-    /**
-     * You should implement the hashCode() so that two equal RecordId instances
-     * (with respect to equals()) have the same hashCode().
-     * 
-     * @return An int that is the same for equal RecordId objects.
-     */
     @Override
     public int hashCode() {
-        // some code goes here
-        throw new UnsupportedOperationException("implement this");
-
+        int result = pid.hashCode();
+        result = 31 * result + tupleno;
+        return result;
     }
-
 }
