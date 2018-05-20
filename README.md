@@ -4,7 +4,7 @@
 
 ### Lab1
 
-实现simpledb的基本结构
+实现simpledb用来访问底层数据存储的主要模块
 
 #### Exercise 1
 
