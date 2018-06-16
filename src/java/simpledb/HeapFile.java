@@ -15,6 +15,9 @@ import java.util.*;
  */
 public class HeapFile implements DbFile {
 
+    private File f = null;
+    private TupleDesc td = null;
+
     /**
      * Constructs a heap file backed by the specified file.
      * 
@@ -24,6 +27,8 @@ public class HeapFile implements DbFile {
      */
     public HeapFile(File f, TupleDesc td) {
         // some code goes here
+        this.f = f;
+        this.td = td;
     }
 
     /**
@@ -33,7 +38,7 @@ public class HeapFile implements DbFile {
      */
     public File getFile() {
         // some code goes here
-        return null;
+        return f;
     }
 
     /**
@@ -45,9 +50,10 @@ public class HeapFile implements DbFile {
      * 
      * @return an ID uniquely identifying this HeapFile.
      */
+    @Override
     public int getId() {
         // some code goes here
-        throw new UnsupportedOperationException("implement this");
+        return f.getAbsoluteFile().hashCode();
     }
 
     /**
@@ -55,18 +61,34 @@ public class HeapFile implements DbFile {
      * 
      * @return TupleDesc of this DbFile.
      */
+    @Override
     public TupleDesc getTupleDesc() {
         // some code goes here
-        throw new UnsupportedOperationException("implement this");
+        return td;
     }
 
     // see DbFile.java for javadocs
+    @Override
     public Page readPage(PageId pid) {
         // some code goes here
+        long pageOffset = pid.getPageNumber() * BufferPool.getPageSize();
+        byte []data = new byte[BufferPool.getPageSize()];
+
+        try {
+            RandomAccessFile randomAccessFile = new RandomAccessFile(this.f, "r");
+            randomAccessFile.seek(pageOffset);
+            randomAccessFile.read(data);
+
+            randomAccessFile.close();
+            return new HeapPage((HeapPageId) pid, data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
     // see DbFile.java for javadocs
+    @Override
     public void writePage(Page page) throws IOException {
         // some code goes here
         // not necessary for lab1
@@ -77,10 +99,11 @@ public class HeapFile implements DbFile {
      */
     public int numPages() {
         // some code goes here
-        return 0;
+        return (int)(this.f.length() * 1.0 / BufferPool.getPageSize());
     }
 
     // see DbFile.java for javadocs
+    @Override
     public ArrayList<Page> insertTuple(TransactionId tid, Tuple t)
             throws DbException, IOException, TransactionAbortedException {
         // some code goes here
@@ -89,6 +112,7 @@ public class HeapFile implements DbFile {
     }
 
     // see DbFile.java for javadocs
+    @Override
     public ArrayList<Page> deleteTuple(TransactionId tid, Tuple t) throws DbException,
             TransactionAbortedException {
         // some code goes here
@@ -97,10 +121,79 @@ public class HeapFile implements DbFile {
     }
 
     // see DbFile.java for javadocs
+    @Override
     public DbFileIterator iterator(TransactionId tid) {
         // some code goes here
-        return null;
+        return new HeapFileIterator(this, tid);
     }
 
+    private class HeapFileIterator implements DbFileIterator {
+        private HeapFile heapFile = null;
+        private TransactionId transactionId = null;
+        private int curPageIndex = 0;
+        private int pageCount = 0;
+        private HeapPage curPage = null;
+        private Iterator<Tuple> curPageIter = null;
+
+        HeapFileIterator(HeapFile heapFile, TransactionId tid) {
+            this.heapFile = heapFile;
+            this.transactionId = tid;
+        }
+
+        @Override
+        public void open() throws DbException, TransactionAbortedException {
+            pageCount = heapFile.numPages();
+            curPage = getHeapPage(curPageIndex, transactionId);
+            curPageIter = curPage.iterator();
+        }
+
+        @Override
+        public boolean hasNext() throws DbException, TransactionAbortedException {
+            if (curPageIter == null) {
+                return false;
+            }
+
+            if (curPageIter.hasNext()) {
+                return true;
+            }
+
+            curPageIndex++;
+            while (curPageIndex < pageCount) {
+                curPage = getHeapPage(curPageIndex, transactionId);
+                curPageIter = curPage.iterator();
+                if (curPageIter.hasNext()) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        @Override
+        public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
+            if (curPageIter == null) {
+                throw new NoSuchElementException();
+            }
+            return curPageIter.next();
+        }
+
+        @Override
+        public void rewind() throws DbException, TransactionAbortedException {
+            close();
+            open();
+        }
+
+        @Override
+        public void close() {
+            curPage = null;
+            curPageIter = null;
+            curPageIndex = 0;
+        }
+
+        private HeapPage getHeapPage(int pageIndex, TransactionId transactionId) throws TransactionAbortedException, DbException {
+            HeapPageId heapPageId = new HeapPageId(heapFile.getId(), pageIndex);
+            return  (HeapPage) Database.getBufferPool().getPage(transactionId, heapPageId, Permissions.READ_ONLY);
+        }
+    }
 }
 
