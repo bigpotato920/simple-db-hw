@@ -31,6 +31,6 @@ HeapPage中isSlotUsed() 我们根据slot的index, 在header字节数组中取到
 ### Exercise 5
 实现 HeapFile
 
-一个HeapFile由多个HeapPage组成
+HeapFile代表数据库中的一张表, 一个HeapFile由多个HeapPage组成
 * readPage()方法是通过九三Page的偏移量,读取HeapFile的底层文件来实现的
 * iterator()方法需要自己实现一个HeapFileIterator, 通过分别遍历Page和Page中的Tuple来判断是有下一个元素'
