@@ -1,4 +1,4 @@
-##MIT 6.832 实验课
+## MIT 6.832 实验课
 
 课程信息可以查询 [这里](https://github.com/MIT-DB-Class/course-info-2017)
 
@@ -28,9 +28,16 @@
 HeapPage中isSlotUsed() 我们根据slot的index, 在header字节数组中取到对应的byte,然后
 在这个byte中找到对应的bit, 判断这个bit是否被设置。需要注意的是判断时从低位的字节算起
 
+* 注意计算ceiling的时候乘以1.0, ceiling(15 / 8) 和 ceiling(15.0 / 8)结果是不一样的
+
 ### Exercise 5
 实现 HeapFile
 
 HeapFile代表数据库中的一张表, 一个HeapFile由多个HeapPage组成
 * readPage()方法是通过九三Page的偏移量,读取HeapFile的底层文件来实现的
 * iterator()方法需要自己实现一个HeapFileIterator, 通过分别遍历Page和Page中的Tuple来判断是有下一个元素'
+
+### Exercise 6
+实现SeqScan
+
+* SeqScan是SimpleDB中的一个操作符,类似SQL中的 `select *`
