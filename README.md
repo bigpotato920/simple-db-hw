@@ -29,6 +29,7 @@ HeapPage中isSlotUsed() 我们根据slot的index, 在header字节数组中取到
 在这个byte中找到对应的bit, 判断这个bit是否被设置。需要注意的是判断时从低位的字节算起
 
 * 注意计算ceiling的时候乘以1.0, ceiling(15 / 8) 和 ceiling(15.0 / 8)结果是不一样的
+* The low (least significant) bits of each byte represents the status of the slots that are earlier in the file
 
 ### Exercise 5
 实现 HeapFile
